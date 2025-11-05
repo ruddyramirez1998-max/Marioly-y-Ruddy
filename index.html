@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ff1493">
+
+    <!-- PWA: Manifest e Icono -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png" type="image/png">
+
+    <title>Marioly & Ruddy</title>
+
+    <!-- Fuentes -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body {
+            background: #000;
+            font-family: 'Georgia', serif;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        canvas { 
+            position: fixed; top: 0; left: 0; z-index: 1; 
+            width: 100vw; height: 100vh;
+        }
+
+        /* LOGIN RESPONSIVE */
+        .login-box {
+            position: relative; z-index: 10;
+            background: rgba(15, 0, 35, 0.9);
+            padding: clamp(30px, 10vw, 60px) clamp(20px, 8vw, 40px);
+            border-radius: 35px;
+            text-align: center;
+            width: 90%; max-width: 420px;
+            box-shadow: 0 0 40px rgba(255, 20, 147, 0.7);
+            border: 3px solid #ff1493;
+            backdrop-filter: blur(12px);
+        }
+        h1 {
+            font-size: clamp(2rem, 7vw, 3.2rem);
+            margin-bottom: 15px; color: #ff69b4;
+            text-shadow: 0 0 20px #ff1493;
+            animation: glow 2s infinite alternate;
+            font-family: 'Dancing Script', cursive;
+        }
+        p {
+            font-size: clamp(1rem, 3.5vw, 1.3rem);
+            margin: 12px 0; color: #ffd1dc;
+            font-style: italic;
+        }
+        input {
+            width: 100%; padding: clamp(14px, 4vw, 20px);
+            margin: 18px 0;
+            border: 2px solid #ff69b4; border-radius: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white; font-size: clamp(1.1rem, 4vw, 1.4rem);
+            text-align: center;
+            transition: all 0.4s;
+        }
+        input:focus {
+            outline: none; border-color: #00ff88;
+            box-shadow: 0 0 25px #00ff88;
+            transform: scale(1.02);
+        }
+        button {
+            background: linear-gradient(45deg, #ff1493, #ff69b4);
+            color: white; border: none;
+            padding: clamp(14px, 4vw, 20px) clamp(40px, 12vw, 60px);
+            font-size: clamp(1.2rem, 4.5vw, 1.6rem);
+            font-weight: bold; border-radius: 50px;
+            cursor: pointer; margin-top: 12px;
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.6);
+            transition: all 0.4s;
+        }
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 20, 147, 0.8);
+        }
+
+        .error {
+            color: #ff6b7a; font-size: clamp(0.9rem, 3vw, 1.1rem);
+            margin-top: 12px; opacity: 0; transition: opacity 0.5s;
+        }
+        .error.show { opacity: 1; animation: shake 0.5s; }
+
+        @keyframes glow { from { text-shadow: 0 0 20px #ff1493; } to { text-shadow: 0 0 40px #ff69b4; } }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+        /* RAMO DE ROSAS LIGERO */
+        .pixel-bouquet {
+            position: fixed; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%) scale(0);
+            width: clamp(300px, 80vw, 420px); height: auto;
+            opacity: 0; z-index: 999; pointer-events: none;
+            transition: all 2s ease-out;
+        }
+        .pixel-bouquet.show {
+            transform: translate(-50%, -50%) scale(1.1);
+            opacity: 1;
+        }
+        .pixel-rose {
+            position: absolute; width: clamp(35px, 10vw, 50px); height: clamp(35px, 10vw, 50px);
+            background: radial-gradient(circle, #ff3333, #cc0000);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 15px #ff1493;
+            animation: float 3s infinite ease-in-out;
+            opacity: 0;
+        }
+        .pixel-rose.show { opacity: 1; }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* PALABRAS VOLADORAS */
+        .love-text {
+            position: fixed; z-index: 999; pointer-events: none;
+            font-size: clamp(1.8rem, 6vw, 3.5rem);
+            font-weight: bold; color: #ff69b4;
+            text-shadow: 0 0 20px #ff1493;
+            font-family: 'Dancing Script', cursive;
+            bottom: -100px; left: 50%; transform: translateX(-50%);
+            opacity: 1; transition: none;
+        }
+
+        /* MENSAJE FINAL */
+        .enter-heart {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(45deg, #ff1414, #ec99e1, #a60be9);
+            background-size: 300% 300%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            font-size: clamp(2.5rem, 10vw, 6rem);
+            color: rgb(248, 244, 244); text-shadow: 0 0 30px #eec5c5;
+            animation: rainbow 4s infinite, pulse 1.5s infinite;
+            font-family: 'Dancing Script', cursive;
+            z-index: 999;
+        }
+        @keyframes rainbow { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="login-box" id="login">
+        <h1>Clave de Amor</h1>
+        <p>Ingresa nuestra fecha mágica...</p>
+        <input type="text" placeholder="dd-mm-aa" id="password" maxlength="8">
+        <button onclick="checkLove()">Entrar al Corazón</button>
+        <p>Mi Marioly</p>
+        <p>Esta fecha nunca la olvidaremos</p>
+        <div class="error" id="error">¡Inténtalo de nuevo, mi amor!</div>
+    </div>
+
+    <audio id="music" loop preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-romantic-love-2616.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // ====== EDITA AQUÍ ======
+        const FECHA_SECRETA = "3-11-25";
+        const PAGINA_AMOR = "https://carta-propuesta.my.canva.site/";
+        const NOMBRE_ELLAS = "Marioly";
+        const NOMBRE_TU = "Ruddy";
+
+        const PALABRAS_FLOTANTES = [
+            "Te Quiero", NOMBRE_ELLAS, "Para siempre", "Mi amor",
+            "Eternamente", "Mi niña", "Juntos", "Contigo",
+            NOMBRE_TU, "Mi vida", "Te extraño", "Mi princesa", "te Amo"
+        ];
+
+        const PALABRAS_VOLADORAS = [
+            "Te amo con todo mi ser",
+            `Eres mi ${NOMBRE_ELLAS}`,
+            "Para siempre juntos",
+            "Mi amor eterno",
+            "Sí, acepto ser tuyo",
+            "Contigo hasta el final",
+            "Mi reina del corazón",
+            `Te amo, ${NOMBRE_ELLAS}`
+        ];
+        // =======================
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let w, h;
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        // ESTRELLAS OPTIMIZADAS
+        const stars = [];
+        for (let i = 0; i < 150; i++) {
+            stars.push({
+                x: Math.random() * w, y: Math.random() * h,
+                r: Math.random() * 1.5, phase: Math.random() * Math.PI * 2
+            });
+        }
+
+        // CORAZONES LIGEROS
+        const hearts = [];
+        function createHeart() {
+            if (hearts.length > 8) return;
+            const palabra = PALABRAS_FLOTANTES[Math.floor(Math.random() * PALABRAS_FLOTANTES.length)];
+            hearts.push({
+                x: Math.random() * w, y: h + 40,
+                vy: -Math.random() * 3 - 2, size: Math.random() * 20 + 18,
+                life: 1, text: palabra
+            });
+        }
+        setInterval(createHeart, 300);
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
+            ctx.fillRect(0, 0, w, h);
+
+            // Estrellas
+            stars.forEach(s => {
+                s.phase += 0.05;
+                const opacity = 0.4 + 0.6 * Math.sin(s.phase);
+                ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+            });
+
+            // Corazones
+            hearts.forEach((h, i) => {
+                h.y += h.vy; h.life -= 0.01;
+                if (h.life <= 0 || h.y < -50) { hearts.splice(i, 1); return; }
+                ctx.font = `${h.size * h.life}px 'Dancing Script'`;
+                ctx.fillStyle = `rgba(255, 20, 147, ${h.life})`;
+                ctx.fillText(h.text, h.x - ctx.measureText(h.text).width / 2, h.y);
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // RAMO RESPONSIVE
+        function createPixelBouquet() {
+            const bouquet = document.createElement('div');
+            bouquet.className = 'pixel-bouquet';
+            const scale = Math.min(w, h) / 500;
+            const positions = [
+                {top: 60*scale, left: 100*scale}, {top: 50*scale, left: 150*scale}, {top: 60*scale, left: 200*scale},
+                {top: 90*scale, left: 80*scale}, {top: 80*scale, left: 125*scale}, {top: 90*scale, left: 170*scale}, {top: 80*scale, left: 215*scale},
+                {top: 120*scale, left: 60*scale}, {top: 110*scale, left: 100*scale}, {top: 120*scale, left: 140*scale}, {top: 110*scale, left: 180*scale}, {top: 120*scale, left: 220*scale},
+                {top: 150*scale, left: 80*scale}, {top: 140*scale, left: 120*scale}, {top: 150*scale, left: 160*scale}, {top: 140*scale, left: 200*scale},
+                {top: 180*scale, left: 100*scale}, {top: 170*scale, left: 140*scale}, {top: 180*scale, left: 180*scale},
+                {top: 110*scale, left: 135*scale}, {top: 140*scale, left: 115*scale}, {top: 140*scale, left: 165*scale},
+                {top: 75*scale, left: 150*scale}
+            ];
+
+            positions.forEach((pos, i) => {
+                const rose = document.createElement('div');
+                rose.className = 'pixel-rose';
+                rose.style.top = pos.top + 'px';
+                rose.style.left = pos.left + 'px';
+                rose.style.animationDelay = (i * 0.07) + 's';
+                bouquet.appendChild(rose);
+            });
+
+            document.body.appendChild(bouquet);
+            setTimeout(() => bouquet.classList.add('show'), 100);
+        }
+
+        // PALABRAS VOLADORAS
+        function showLoveWords() {
+            PALABRAS_VOLADORAS.forEach((word, i) => {
+                setTimeout(() => {
+                    const span = document.createElement('div');
+                    span.className = 'love-text';
+                    span.textContent = word;
+                    span.style.left = Math.random() * 60 + 20 + 'vw';
+                    span.style.color = ['#ff1493', '#ff69b4', '#00ff88'][i % 3];
+                    document.body.appendChild(span);
+
+                    setTimeout(() => {
+                        span.style.transition = 'all 2.8s ease-out';
+                        span.style.bottom = '120vh';
+                        span.style.opacity = '0';
+                    }, 50);
+
+                    setTimeout(() => span.remove(), 3000);
+                }, i * 400);
+            });
+        }
+
+        function checkLove() {
+            const input = document.getElementById('password').value.trim();
+            const login = document.getElementById('login');
+
+            if (input === FECHA_SECRETA) {
+                login.style.opacity = '0';
+                document.getElementById('music').play().catch(() => {});
+                if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+
+                createPixelBouquet();
+                showLoveWords();
+
+                setTimeout(() => {
+                    document.body.innerHTML = `
+                        <div class="enter-heart">
+                            <div>  INGRESANDO </div>
+                            <div>  A MI </div>
+                            <div>  CORAZÓN </div>
+                            <div style="font-size:0.3em; margin-top:25px;">
+                                ${NOMBRE_ELLAS}, te amo para siempre...
+                            </div>
+                        </div>
+                    `;
+                    setTimeout(() => window.location.href = PAGINA_AMOR, 2800);
+                }, 2800);
+            } else {
+                document.getElementById('error').classList.add('show');
+                setTimeout(() => document.getElementById('error').classList.remove('show'), 2000);
+                if ('vibrate' in navigator) navigator.vibrate(300);
+            }
+        }
+
+        document.getElementById('password').addEventListener('keypress', e => {
+            if (e.key === 'Enter') checkLove();
+        });
+
+        // ====== PWA: REGISTRO DEL SERVICE WORKER ======
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+            
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado:', reg))
+                    .catch(err => console.log('Error al registrar SW:', err));
+            });
+        }
+    </script>
+</body>
+</html>
